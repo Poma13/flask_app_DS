@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Звонок на сервере {{ server.name }}</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #2c2f33;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      overflow: hidden;
+    }
+
+    .video-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    video, .avatar-placeholder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background-color: #23272a;
+    }
+
+    .avatar-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+    }
+
+    .username-label {
+      position: absolute;
+      bottom: 80px;
+      right: 20px;
+      background-color: rgba(0,0,0,0.5);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 2rem;
+      font-weight: 600;
+      color: white;
+      background-color: rgba(0,0,0,0.3);
+      padding-bottom: 6px;
+      height: 55px;
+      width: 60px;
+      border-radius: 49%;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .arrow.left {
+      left: 20px;
+    }
+
+    .arrow.right {
+      right: 20px;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background-color: #23272a;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .control-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: none;
+      transition: 0.2s;
+    }
+
+    .mic-on, .video-on, .screen-on {
+      background-color: #ed4245;
+      color: white;
+    }
+
+    .mic-off, .video-off, .screen-off {
+      background-color: #40444b;
+      color: white;
+    }
+
+    .chat-btn {
+      background-color: #7289da;
+      color: white;
+    }
+
+    .leave-btn {
+      background-color: #cd5c5c;
+      color: white;
+    }
+
+    .small-preview {
+      position: absolute;
+      bottom: 90px;
+      left: 20px;
+      width: 160px;
+      height: 90px;
+      border: 2px solid white;
+      border-radius: 2px;
+      background: black;
+      z-index: 10;
+    }
+
+    .small-preview video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-placeholder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background-color: #23272a;
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="video-container">
+  <!-- Большое видео -->
+  <video id="main-video" autoplay playsinline></video>
+  <img id="avatar-placeholder" class="avatar-placeholder" src="" alt="avatar" style="display: none;">
+
+
+  <!-- Ник пользователя -->
+  <div class="username-label" id="username-label"></div>
+
+  <!-- Стрелки -->
+  <div class="arrow left" onclick="prevUser()"><</div>
+  <div class="arrow right" onclick="nextUser()">️></div>
+
+  <!-- Маленькое видео -->
+  <div class="small-preview">
+    <video id="self-preview" autoplay muted playsinline></video>
+  </div>
+
+  <!-- Панель управления -->
+  <div class="controls">
+    <button class="control-btn mic-off" id="micBtn" onclick="toggleMic()">🎙️</button>
+    <button class="control-btn video-off" id="camBtn" onclick="toggleCamera()">🎥</button>
+    <button class="control-btn screen-off" id="screenBtn" onclick="toggleScreen()">🖥️</button>
+    <button class="control-btn chat-btn" onclick="goToChat()">💬</button>
+    <form method="POST" action="{{ url_for('leave_call', server_id=server.id) }}">
+      <button class="control-btn leave-btn" type="submit">🔚</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Сюда ты вставишь WebRTC + логику переключения участников
+
+  function toggleMic() {
+    const btn = document.getElementById("micBtn");
+    btn.classList.toggle("mic-on");
+    btn.classList.toggle("mic-off");
+  }
+
+  function toggleCamera() {
+    const camBtn = document.getElementById("camBtn");
+    const screenBtn = document.getElementById("screenBtn");
+
+    if (screenBtn.classList.contains("screen-on")) {
+      toggleScreen(); // Выключить трансляцию экрана
+    }
+
+    camBtn.classList.toggle("video-on");
+    camBtn.classList.toggle("video-off");
+  }
+
+  function toggleScreen() {
+    const screenBtn = document.getElementById("screenBtn");
+    const camBtn = document.getElementById("camBtn");
+
+    if (camBtn.classList.contains("video-on")) {
+      toggleCamera(); // Выключить камеру
+    }
+
+    screenBtn.classList.toggle("screen-on");
+    screenBtn.classList.toggle("screen-off");
+  }
+
+  function goToChat() {
+    window.location.href = "{{ url_for('server_chat', server_id=server.id) }}";
+  }
+
+  function nextUser() {
+    // В будущем — переключение между участниками
+    console.log("Следующий участник");
+  }
+
+  function prevUser() {
+    console.log("Предыдущий участник");
+  }
+</script>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://unpkg.com/simple-peer@9.11.1/simplepeer.min.js"></script>
+<script>
+const currentUserId = {{ current_user_id }};
+const allMembers = {{ members | tojson }};
+let remotePeers = [];
+let currentIndex = 0;
+</script>
+
+<script>
+const socket = io();
+const peers = {};
+const room = "{{ server.id }}";
+
+const selfVideo = document.getElementById('self-preview');
+const mainVideo = document.getElementById('main-video');
+const avatar = document.getElementById('avatar-placeholder');
+
+let currentStream;
+let audioTrack = null;
+let videoTrack = null;
+let screenTrack = null;
+
+let currentVideoStream = null;
+
+const micBtn = document.getElementById("micBtn");
+const camBtn = document.getElementById("camBtn");
+const screenBtn = document.getElementById("screenBtn");
+
+async function startMedia() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    currentStream = stream;
+    selfVideo.srcObject = stream;
+
+    audioTrack = stream.getAudioTracks()[0];
+    videoTrack = stream.getVideoTracks()[0];
+    currentVideoStream = videoTrack;
+
+    // Добавляем себя в список
+    remotePeers.unshift({
+      socketId: null,
+      userId: currentUserId,
+      stream: stream,
+      isSelf: true
+    });
+
+    showPeerStream(0); // показываем себя первым
+
+    socket.emit('join_call', { room });
+  } catch (err) {
+    console.error("Не удалось получить доступ к камере/микрофону:", err);
+  }
+}
+
+function replaceStream(newTrack) {
+  for (let id in peers) {
+    const sender = peers[id]._pc.getSenders().find(s => s.track?.kind === newTrack.kind);
+    if (sender) sender.replaceTrack(newTrack);
+  }
+}
+
+function toggleMic() {
+  if (!audioTrack) return;
+  audioTrack.enabled = !audioTrack.enabled;
+  micBtn.classList.toggle("mic-on", audioTrack.enabled);
+  micBtn.classList.toggle("mic-off", !audioTrack.enabled);
+}
+
+function toggleCamera() {
+  if (!videoTrack) return;
+  if (screenTrack) stopScreenShare();
+
+  videoTrack.enabled = !videoTrack.enabled;
+  camBtn.classList.toggle("video-on", videoTrack.enabled);
+  camBtn.classList.toggle("video-off", !videoTrack.enabled);
+}
+
+async function toggleScreen() {
+  if (screenTrack) {
+    stopScreenShare();
+    return;
+  }
+
+  try {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+    screenTrack = screenStream.getVideoTracks()[0];
+
+    screenTrack.onended = () => {
+      stopScreenShare();
+    };
+
+    replaceStream(screenTrack);
+    screenBtn.classList.add("screen-on");
+    screenBtn.classList.remove("screen-off");
+
+    currentVideoStream = screenTrack;
+    selfVideo.srcObject = new MediaStream([screenTrack]);
+  } catch (err) {
+    console.error("Ошибка при включении трансляции экрана:", err);
+  }
+}
+
+function stopScreenShare() {
+  if (!screenTrack) return;
+  screenTrack.stop();
+  screenTrack = null;
+  replaceStream(videoTrack);
+  screenBtn.classList.remove("screen-on");
+  screenBtn.classList.add("screen-off");
+
+  currentVideoStream = videoTrack;
+  selfVideo.srcObject = new MediaStream([videoTrack]);
+}
+
+function leaveCall() {
+  if (currentStream) currentStream.getTracks().forEach(track => track.stop());
+  for (let id in peers) peers[id].destroy();
+  socket.disconnect();
+}
+
+function showPeerStream(index) {
+  if (index < 0 || index >= remotePeers.length) return;
+  currentIndex = index;
+
+  const peer = remotePeers[index];
+  const isSelf = peer.isSelf === true;
+  const userId = isSelf ? currentUserId : peer.userId;
+  const usernameLabel = document.getElementById('username-label');
+
+  const member = allMembers.find(m => m.id === userId);
+
+  usernameLabel.textContent = isSelf ? "Вы" : (member?.nickname || member?.username || "Участник");
+
+  const stream = peer.stream;
+  const hasVideo = stream.getVideoTracks().length > 0;
+
+  if (!hasVideo) {
+    mainVideo.style.display = 'none';
+    avatar.src = member?.avatar ? `/static/avatars/${member.avatar}` : '';
+    avatar.style.display = 'block';
+  } else {
+    mainVideo.srcObject = stream;
+    mainVideo.style.display = 'block';
+    avatar.style.display = 'none';
+  }
+}
+
+function prevUser() {
+  if (remotePeers.length <= 1) return;
+  let newIndex = (currentIndex - 1 + remotePeers.length) % remotePeers.length;
+  showPeerStream(newIndex);
+}
+
+function nextUser() {
+  if (remotePeers.length <= 1) return;
+  let newIndex = (currentIndex + 1) % remotePeers.length;
+  showPeerStream(newIndex);
+}
+
+socket.on('user-joined', ({ id }) => {
+  const peer = new SimplePeer({
+    initiator: true,
+    trickle: false,
+    stream: currentStream
+  });
+
+  peer.on('signal', signal => {
+    socket.emit('signal', { to: id, signal });
+  });
+
+  peer.on('stream', stream => {
+    remotePeers.push({ socketId: id, userId: null, stream });
+    if (remotePeers.length === 1) showPeerStream(0);
+  });
+
+  peers[id] = peer;
+});
+
+socket.on('signal', ({ from, signal }) => {
+  if (!peers[from]) {
+    const peer = new SimplePeer({
+      initiator: false,
+      trickle: false,
+      stream: currentStream
+    });
+
+    peer.on('signal', s => {
+      socket.emit('signal', { to: from, signal: s });
+    });
+
+    peer.on('stream', stream => {
+      remotePeers.push({ socketId: from, userId: null, stream });
+    });
+
+    peers[from] = peer;
+    peer.signal(signal);
+  } else {
+    peers[from].signal(signal);
+  }
+});
+
+socket.on('user-left', ({ id }) => {
+  if (peers[id]) {
+    peers[id].destroy();
+    delete peers[id];
+  }
+  remotePeers = remotePeers.filter(p => p.socketId !== id);
+  if (currentIndex >= remotePeers.length) currentIndex = 0;
+  showPeerStream(currentIndex);
+});
+
+window.addEventListener("beforeunload", leaveCall);
+startMedia();
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Создать сервер</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background-color: #313338;
+      color: #f2f3f5;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .server-creation-box {
+      background-color: #2b2d31;
+      border-radius: 8px;
+      padding: 25px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .creation-header {
+      color: #f2f3f5;
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 22px;
+    }
+
+    .form-field {
+      margin-bottom: 20px;
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #b5bac1;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .text-input {
+      width: 100%;
+      padding: 12px;
+      background-color: #1e1f22;
+      border: 1px solid #3f4247;
+      border-radius: 4px;
+      color: #dbdee1;
+      font-size: 15px;
+    }
+
+    .text-input:focus {
+      outline: none;
+      border-color: #5865f2;
+    }
+
+    .friends-selector {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .friend-option {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .option-checkbox {
+      display: none;
+    }
+
+    .friend-card {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background-color: #383a40;
+      border-radius: 4px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .friend-card:hover {
+      background-color: #40444b;
+    }
+
+    .option-checkbox:checked + .friend-card {
+      background-color: #5865f2;
+    }
+
+    .friend-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 10px;
+      object-fit: cover;
+    }
+
+    .friend-name {
+      color: #f2f3f5;
+      font-size: 15px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .primary-button {
+      flex: 1;
+      padding: 12px;
+      background-color: #5865f2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .primary-button:hover {
+      background-color: #4752c4;
+    }
+
+    .secondary-button {
+      flex: 1;
+      padding: 12px;
+      background-color: #4f545c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: background-color 0.2s;
+    }
+
+    .secondary-button:hover {
+      background-color: #686d73;
+    }
+
+    /* Кастомный скроллбар */
+    .friends-selector::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .friends-selector::-webkit-scrollbar-track {
+      background: #2b2d31;
+    }
+
+    .friends-selector::-webkit-scrollbar-thumb {
+      background: #1a1b1e;
+      border-radius: 3px;
+    }
+
+    .error-message {
+      color: #ed4245;
+      font-size: 13px;
+      margin-top: 5px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="server-creation-box">
+    <h2 class="creation-header">Создать новый сервер</h2>
+
+    <form method="POST" action="{{ url_for('create_server') }}" class="server-form">
+      <div class="form-field">
+        <label for="server_name" class="field-label">Название сервера</label>
+        <input type="text" id="server_name" name="name"
+              class="text-input" placeholder="Только буквы и цифры" required
+              pattern="[A-Za-z0-9]+" title="Только буквы и цифры">
+        {% if name_error %}
+          <span class="error-message">{{ name_error }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Выберите участников</label>
+        <div class="friends-selector" id="friends-container">
+          {% for friend in friends %}
+          <label class="friend-option">
+            <input type="checkbox" name="members" value="{{ friend.id }}" class="option-checkbox">
+            <div class="friend-card">
+              <img src="{{ url_for('static', filename='avatars/' + (friend.avatar or 'default.png')) }}"
+                  class="friend-avatar">
+              <span class="friend-name">{{ friend.nickname or friend.username }}</span>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+        {% if members_error %}
+          <span class="error-message">{{ members_error }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="primary-button">Создать</button>
+        <a href="{{ url_for('users') }}" class="secondary-button">Отмена</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Исправленный обработчик выбора друзей
+    document.addEventListener('DOMContentLoaded', function() {
+      const friendsContainer = document.getElementById('friends-container');
+
+      friendsContainer.addEventListener('click', function(e) {
+        // Находим ближайший элемент friend-option
+        const friendOption = e.target.closest('.friend-option');
+        if (!friendOption) return;
+
+        // Находим чекбокс внутри этого элемента
+        const checkbox = friendOption.querySelector('.option-checkbox');
+        if (!checkbox) return;
+
+        // Переключаем состояние чекбокса
+        checkbox.checked = !checkbox.checked;
+
+        // Обновляем стиль карточки
+        const friendCard = friendOption.querySelector('.friend-card');
+        if (checkbox.checked) {
+          friendCard.style.backgroundColor = '#5865f2';
+        } else {
+          friendCard.style.backgroundColor = '#383a40';
+        }
+      });
+    });
+
+    // Валидация формы перед отправкой
+    document.querySelector('.server-form').addEventListener('submit', function(e) {
+      const nameInput = document.getElementById('server_name');
+      if (!/^[A-Za-z0-9]+$/.test(nameInput.value)) {
+        alert('Название сервера должно содержать только буквы и цифры');
+        e.preventDefault();
+        return;
+      }
+
+      const checkedBoxes = document.querySelectorAll('.option-checkbox:checked');
+      if (checkedBoxes.length === 0) {
+        alert('Пожалуйста, выберите хотя бы одного участника');
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>

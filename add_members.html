@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Добавить участников</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #313338;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .add-members-container {
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #2b2d31;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+    }
+
+    .friends-list {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+
+    .friend-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      background-color: #383a40;
+      transition: background-color 0.2s;
+    }
+
+    .friend-item:hover {
+      background-color: #40444b;
+    }
+
+    .friend-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 12px;
+      object-fit: cover;
+    }
+
+    .friend-name {
+      flex-grow: 1;
+    }
+
+    .friend-checkbox {
+      margin-left: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 4px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background-color: #5865f2;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #4752c4;
+    }
+
+    .btn-secondary {
+      background-color: #4f545c;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #686d73;
+    }
+
+    /* Кастомный скроллбар */
+    .friends-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .friends-list::-webkit-scrollbar-track {
+      background: #2b2d31;
+    }
+
+    .friends-list::-webkit-scrollbar-thumb {
+      background: #1a1b1e;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="add-members-container">
+    <div class="header">Добавить участников в {{ server.name }}</div>
+
+    <form method="POST" action="{{ url_for('add_members', server_id=server.id) }}">
+      <div class="friends-list">
+        {% for friend in friends %}
+        <label class="friend-item">
+          <img src="{{ url_for('static', filename='avatars/' + (friend.avatar or 'default.png')) }}"
+               class="friend-avatar">
+          <span class="friend-name">{{ friend.nickname or friend.username }}</span>
+          <input type="checkbox" name="members" value="{{ friend.id }}" class="friend-checkbox">
+        </label>
+        {% else %}
+        <div style="text-align: center; color: #b5bac1;">
+          Нет друзей, которых можно добавить
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="actions">
+        <a href="{{ url_for('server_chat', server_id=server.id) }}" class="btn btn-secondary">Отмена</a>
+        <button type="submit" class="btn btn-primary">Добавить выбранных</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Мои чаты</title>
+  <style>
+    :root {
+      --primary: #5865f2;
+      --primary-hover: #4752c4;
+      --danger: #ed4245;
+      --danger-hover: #c12c2e;
+      --background: #313338;
+      --card-bg: #2b2d31;
+      --card-hover: #3a3d44;
+      --text: #ffffff;
+      --text-muted: #b9bbbe;
+      --border: #40444b;
+      --online: #3ba55c;
+      --offline: #747f8d;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      padding-bottom: 80px;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      border-bottom: 2px solid var(--primary);
+      color: var(--primary);
+    }
+
+    .tab:hover:not(.active) {
+      border-bottom: 2px solid var(--text-muted);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .create-btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 4px;
+      text-decoration: none;
+      margin-bottom: 15px;
+      transition: background-color 0.2s;
+    }
+
+    .create-btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .card:hover {
+      background-color: var(--card-hover);
+      transform: translateY(-2px);
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 12px;
+    }
+
+    .server-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 30%;
+      background-color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      color: white;
+      font-weight: bold;
+    }
+
+    .info {
+      flex-grow: 1;
+    }
+
+    .name {
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .meta {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-muted);
+    }
+
+    .profile-editor {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--card-bg);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .profile-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 10px;
+    }
+
+    .profile-name-input {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 2px 5px;
+      border-radius: 3px;
+      width: 150px;
+    }
+
+    .profile-name-input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .profile-status {
+      font-size: 12px;
+      color: var(--online);
+    }
+
+    .settings-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .settings-btn:hover {
+      color: var(--text);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 20px;
+      width: 300px;
+      //height: 130px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .modal-body{
+      //height: 80%;
+	  //display: flex;
+	  //flex-direction: column;
+	  //justify-content: space-around;
+
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .logout-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background-color: var(--danger);
+      color: white;
+      text-align: center;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .logout-btn:hover {
+      background-color: var(--danger-hover);
+    }
+
+       .dang-btn {
+    background-color: var(--card-bg);
+    color: #eeeeee;
+    border: none;
+    cursor: pointer;
+    padding: 10px 30px;
+    border-radius: 8px;
+    font-weight: 300;
+    flex: 1;
+    text-align: center;
+    height: 100%;
+    transition: all 0.2s;
+    }
+
+    .dang-btn:hover {
+      background-color: #CD5C5C;
+      transform: translateY(-2px);
+    }
+
+      .friend-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    }
+
+    .friend-card {
+      flex: 1;
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .friend-card:hover {
+      background-color: var(--card-hover);
+      transform: translateY(-2px);
+    }
+
+    .friend-btn {
+      width: 140px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="tabs">
+      <div class="tab active" data-tab="servers">Серверы</div>
+      <div class="tab" data-tab="friends">Друзья</div>
+    </div>
+
+    <div id="servers" class="tab-content active">
+         <a href="{{ url_for('create_server') }}" class="create-btn">+ Создать сервер</a>
+
+         {% if servers %}
+           {% for server in servers %}
+              <div class="friend-container">
+            <div class="friend-card" onclick="location.href='{{ url_for('server_chat', server_id=server.id) }}'">
+              <div class="server-icon">{{ server.name[0]|upper }}</div>
+
+              <div class="info">
+                <div class="name">{{ server.name }}</div>
+                <div class="meta">Написать сообщение</div>
+              </div>
+            </div>
+           {% if server.creator_id != current_user.id %}
+            <form method="POST" action="{{ url_for('leave_server', server_id=server.id, user_id=current_user.id) }}"
+                onsubmit="return confirm('Вы уверены, что хотите покинуть сервер {{ server.name }}?');"
+                class="friend-btn">
+              <button type="submit" class="dang-btn">Покинуть сервер</button>
+            </form>
+            {% endif %}
+          </div>
+           {% endfor %}
+         {% else %}
+           <div class="empty-state">
+             <p>Вы пока не состоите ни в одном сервере</p>
+           </div>
+         {% endif %}
+       </div>
+
+    <div id="friends" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <a href="{{ url_for('find_user') }}" class="create-btn">Найти пользователя</a>
+      </div>
+      {% if friends %}
+        {% for friend in friends %}
+          <div class="friend-container">
+            <div class="friend-card" onclick="location.href='{{ url_for('chat', friend_id=friend.id, friend_username=friend.username) }}'">
+              <img src="{{ url_for('static', filename='avatars/' + (friend.avatar or 'default.png')) }}"
+                   alt="{{ friend.username }}" class="avatar">
+              <div class="info">
+                <div class="name">{{ friend.nickname or friend.username }}</div>
+                <div class="meta">Написать сообщение</div>
+              </div>
+            </div>
+            <form method="POST" action="{{ url_for('remove_friend', friend_id=friend.id) }}"
+                onsubmit="return confirm('Вы уверены, что хотите удалить {{ friend.username }} из друзей?');"
+                class="friend-btn">
+              <button type="submit" class="dang-btn">Удалить из друзей</button>
+            </form>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <p>У вас пока нет друзей</p>
+          <p>Добавьте друзей, чтобы начать общение</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="profile-editor">
+    <form method="POST" action="{{ url_for('update_profile') }}" enctype="multipart/form-data" id="profile-form">
+      <label for="avatar-upload">
+        <img src="{{ url_for('static', filename='avatars/' + (current_user.avatar or 'default.png')) }}"
+             class="profile-avatar" id="avatar-preview">
+      </label>
+      <input type="file" id="avatar-upload" name="avatar" accept="image/*" style="display: none;">
+
+      <div class="profile-info">
+        <input type="text" name="nickname" value="{{ current_user.nickname or current_user.username }}"
+               class="profile-name-input" id="nickname-input">
+        <div class="username">@{{current_user.username}}</div>
+        <div class="profile-status">Online</div>
+      </div>
+    </form>
+
+    <button class="settings-btn" onclick="document.getElementById('settings-modal').style.display='flex'">⚙</button>
+  </div>
+
+  <div id="settings-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Настройки</h3>
+        <button class="close-button" onclick="document.getElementById('settings-modal').style.display='none'">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!--<div class="username">@{{current_user.username}}</div>!-->
+        <button class="logout-btn" onclick="location.href='{{ url_for('logout') }}'">Выйти из аккаунта</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Обработка изменения аватара
+    document.getElementById('avatar-upload').addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('avatar-preview').src = e.target.result;
+        }
+        reader.readAsDataURL(this.files[0]);
+        document.getElementById('profile-form').submit();
+      }
+    });
+
+    // Обработка изменения ника
+    document.getElementById('nickname-input').addEventListener('blur', function() {
+      if (this.value !== "{{ current_user.nickname or current_user.username }}") {
+        document.getElementById('profile-form').submit();
+      }
+    });
+
+    // Переключение вкладок
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        this.classList.add('active');
+        document.getElementById(this.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Анимация при нажатии на карточку
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('mousedown', function() {
+        this.style.transform = 'scale(0.98)';
+      });
+      card.addEventListener('mouseup', function() {
+        this.style.transform = '';
+      });
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = '';
+      });
+    });
+  </script>
+</body>
+</html>
